@@ -19,6 +19,7 @@ jobs:
 
       - name: Set kubectl context
         run: |
+          mkdir -p ~/.kube
           kubectl config get-contexts
           kubectl config use-context minikube
 
