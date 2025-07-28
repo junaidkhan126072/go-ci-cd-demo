@@ -17,5 +17,6 @@ spec:
       containers:
         - name: go-app
           image: junaidkhan126072/go-ci-cd-demo:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
