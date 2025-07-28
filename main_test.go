@@ -18,7 +18,7 @@ func TestHelloHandler(t *testing.T) {
 	HelloHandler(rec, req)
 
 	// Step 4: Check the response body
-	expected := "Hello, CI/CD with Go!\n"
+	expected := "🚀 Hello from CI/CD!\n"
 	actual := rec.Body.String()
 
 	if strings.TrimSpace(actual) != strings.TrimSpace(expected) {
