@@ -15,11 +15,11 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
+          mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > $HOME/.kube/config
 
       - name: Set kubectl context
         run: |
-          mkdir -p ~/.kube
           kubectl config get-contexts
           kubectl config use-context minikube
 
