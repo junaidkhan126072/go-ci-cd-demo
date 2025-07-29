@@ -10,46 +10,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Kubernetes configuration
+      - name: Set up Kubeconfig
         run: |
-          # Decode the kubeconfig secret and save to a file
-          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > kubeconfig.yaml
+          sudo mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
 
-          # Verify file was created
-          echo "Kubeconfig file created:"
-          ls -l kubeconfig.yaml
-          echo "First 100 characters of kubeconfig:"
-          head -c 100 kubeconfig.yaml
-
-          # Set environment variable for subsequent steps
-          echo "KUBECONFIG=$PWD/kubeconfig.yaml" >> $GITHUB_ENV
-
-      - name: Verify cluster access
+      - name: Confirm cluster connection
         run: |
-          # Check config and cluster connection
-          echo "Current KUBECONFIG: $KUBECONFIG"
-          kubectl config view
           kubectl cluster-info
-          kubectl get nodes
 
-      - name: Set Kubernetes context
+      - name: Set kubectl context
         run: |
+          kubectl config get-contexts
           kubectl config use-context minikube
-          kubectl config current-context
 
-      - name: Deploy application
+      - name: Deploy to Kubernetes
         run: |
-          echo "Deploying manifests from k8s/ directory"
-          kubectl apply -f k8s/ --validate=true
-          echo "Deployment status:"
-          kubectl get deployments,services,pods --all-namespaces
-
-      - name: Verify deployment
-        run: |
-          # Add verification logic specific to your application
-          echo "Verifying deployment..."
-          kubectl rollout status deployment/<your-deployment-name> --timeout=2m
-          # Add any additional checks here
+          kubectl apply -f k8s/
