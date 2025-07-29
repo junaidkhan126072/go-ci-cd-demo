@@ -13,19 +13,22 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Set up kubeconfig in /tmp
+      - name: Set up kubeconfig
         run: |
-          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > /tmp/kubeconfig
+          # Create the .kube directory if it doesn't exist
+          mkdir -p ~/.kube
+          # Decode and save kubeconfig to standard location
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
+          # Verify file was created
+          ls -la ~/.kube/config
 
       - name: Confirm cluster connection
-        run: |
-          kubectl --kubeconfig=/tmp/kubeconfig cluster-info
+        run: kubectl cluster-info
 
       - name: Set kubectl context
         run: |
-          kubectl --kubeconfig=/tmp/kubeconfig config use-context minikube || true
-          kubectl --kubeconfig=/tmp/kubeconfig config get-contexts
+          kubectl config use-context minikube
+          kubectl config get-contexts
 
       - name: Deploy to Kubernetes
-        run: |
-          kubectl --kubeconfig=/tmp/kubeconfig apply -f k8s/
+        run: kubectl apply -f k8s/
