@@ -10,25 +10,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up kubeconfig
+      - name: Setup Kubernetes configuration
         run: |
-          # Create the .kube directory if it doesn't exist
-          mkdir -p ~/.kube
-          # Decode and save kubeconfig to standard location
-          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
+          # Decode the kubeconfig secret and save to a file
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > kubeconfig.yaml
+
           # Verify file was created
-          ls -la ~/.kube/config
+          echo "Kubeconfig file created:"
+          ls -l kubeconfig.yaml
+          echo "First 100 characters of kubeconfig:"
+          head -c 100 kubeconfig.yaml
 
-      - name: Confirm cluster connection
-        run: kubectl cluster-info
+          # Set environment variable for subsequent steps
+          echo "KUBECONFIG=$PWD/kubeconfig.yaml" >> $GITHUB_ENV
 
-      - name: Set kubectl context
+      - name: Verify cluster access
+        run: |
+          # Check config and cluster connection
+          echo "Current KUBECONFIG: $KUBECONFIG"
+          kubectl config view
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Set Kubernetes context
         run: |
           kubectl config use-context minikube
-          kubectl config get-contexts
+          kubectl config current-context
 
-      - name: Deploy to Kubernetes
-        run: kubectl apply -f k8s/
+      - name: Deploy application
+        run: |
+          echo "Deploying manifests from k8s/ directory"
+          kubectl apply -f k8s/ --validate=true
+          echo "Deployment status:"
+          kubectl get deployments,services,pods --all-namespaces
+
+      - name: Verify deployment
+        run: |
+          # Add verification logic specific to your application
+          echo "Verifying deployment..."
+          kubectl rollout status deployment/<your-deployment-name> --timeout=2m
+          # Add any additional checks here
